@@ -7,6 +7,7 @@ import { UserModule } from '../user/user.module';
 import { LocalStrategy } from 'src/passports/local.strategy';
 import { JwtStrategy } from 'src/passports/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [

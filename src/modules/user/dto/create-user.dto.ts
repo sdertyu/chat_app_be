@@ -1,4 +1,4 @@
-import { IsOptional } from "class-validator";
+import { IsEmail, IsOptional, IsString } from "class-validator";
 
 export class CreateUserDto {
 
@@ -7,7 +7,10 @@ export class CreateUserDto {
     @IsOptional()
     phone: string;
 
+    @IsEmail()
     email: string;
+
+    @IsString()
     password: string;
 
     @IsOptional()
@@ -39,4 +42,7 @@ export class CreateUserDto {
 
     @IsOptional()
     updatedAt: Date;
+
+    @IsOptional()
+    file: File;
 }
