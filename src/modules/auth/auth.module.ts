@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PassportModule } from '@nestjs/passport';
@@ -8,6 +8,7 @@ import { LocalStrategy } from 'src/passports/local.strategy';
 import { JwtStrategy } from 'src/passports/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MulterModule } from '@nestjs/platform-express';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -18,13 +19,14 @@ import { MulterModule } from '@nestjs/platform-express';
         secret: configService.get<string>(
           'JWT_SECRET_KEY',
         ), // Lấy từ .env
-        signOptions: { expiresIn: '1h' },
+        signOptions: { expiresIn: '5s' },
       }),
       inject: [ConfigService],
     }),
-    UserModule,
+    forwardRef(() => UserModule), // Sử dụng forwardRef để tránh vòng lặp phụ thuộc
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
+  exports: [AuthService], // Xuất AuthService và JwtModule để sử dụng ở nơi khác
 })
 export class AuthModule {}

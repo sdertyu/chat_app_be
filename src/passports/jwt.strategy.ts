@@ -7,14 +7,19 @@ import { ConfigService } from '@nestjs/config'; // Import ConfigService
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private configService: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => {
+        //   console.log(req?.cookies?.jwt);
+          return req?.cookies?.jwt;
+        },
+      ]),
+
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('JWT_SECRET_KEY', ''), // Lấy từ ConfigService
     });
-    console.log(configService.get<string>('JWT_SECRET_KEY', 'default-secret'));
   }
 
-  async validate(payload: { sub: number; email?: string }) {
-    return { id: payload.sub, email: payload.email ?? 'null' };
+  async validate(payload: { email?: string, sub: number, firstName: string, middleName: string, lastName: string }) {
+    return { id: payload.sub, email: payload.email, firstName: payload.firstName, middleName: payload.middleName, lastName: payload.lastName };
   }
 }

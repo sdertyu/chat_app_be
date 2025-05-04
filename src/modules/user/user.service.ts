@@ -3,19 +3,31 @@ import { Users } from './../../entities/Users';
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { RefreshTokens } from 'src/entities/RefreshTokens';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(Users)
-    private readonly repository: Repository<Users>,
+    private readonly repositoryUser: Repository<Users>,
+
+    @InjectRepository(RefreshTokens)
+    private readonly refreshTokenRepository: Repository<RefreshTokens>,
   ) {}
 
   findByEmail(email: string): Promise<Users | null> {
-    return this.repository.findOneBy({ email });
+    return this.repositoryUser
+      .createQueryBuilder('user')
+      .leftJoinAndSelect(
+        'user.refreshTokens',
+        'refreshTokens',
+        'refreshTokens.revoked = false',
+      )
+      .where('user.email = :email', { email })
+      .getOne();
   }
 
   async validateUser(email: string, password: string): Promise<Users | null> {
@@ -32,20 +44,20 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto) {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const user = this.repository.create({
+    const user = this.repositoryUser.create({
       ...createUserDto,
       password: hashedPassword,
     });
-    return this.repository.save(user);
+    return this.repositoryUser.save(user);
   }
 
   async register(user: Partial<CreateUserDto>): Promise<Users> {
-    const newUser = this.repository.create(user);
+    const newUser = this.repositoryUser.create(user);
     newUser.createdAt = new Date(); // Set createdAt to current date
     newUser.updatedAt = new Date(); // Set updatedAt to current date
     const hashedPassword = await bcrypt.hash(user.password, 10); // Hash the password
     newUser.password = hashedPassword; // Set the hashed password
-    return this.repository.save(newUser);
+    return this.repositoryUser.save(newUser);
   }
 
   findAll() {
@@ -62,5 +74,21 @@ export class UserService {
 
   remove(id: number) {
     return `This action removes a #${id} user`;
+  }
+
+  saveRefreshToken(userId: number, refreshToken: string, expiresAt: Date) {
+    const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
+    const refreshTokenEntity = this.refreshTokenRepository.create({
+      userId: userId,
+      token: hashedRefreshToken,
+      expiresAt: expiresAt,
+    });
+    return this.refreshTokenRepository.save(refreshTokenEntity);
+  }
+
+  // refreshToken.service.ts
+  async revokeToken(token: string) {
+    const hashedToken = bcrypt.hashSync(token, 10);
+    await this.refreshTokenRepository.update({ token: hashedToken }, { revoked: true });
   }
 }
