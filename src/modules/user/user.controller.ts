@@ -43,10 +43,10 @@ export class UserController {
     return this.userService.remove(+id);
   }
 
-  @Get('me')
   @UseGuards(JwtAuthGuard) // Sử dụng JwtAuthGuard để bảo vệ route này
+  @Get('me2')
   getMe(@Req() req: any) {
-    console.log(req);
+    console.log(req.user); // In ra thông tin người dùng đã xác thực
     return req.user; // Trả về thông tin người dùng đã xác thực
   }
 }

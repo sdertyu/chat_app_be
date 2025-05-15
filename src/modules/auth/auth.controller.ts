@@ -54,7 +54,7 @@ export class AuthController {
       httpOnly: true,
       secure: false, // Chuyển thành true nếu dùng HTTPS
       sameSite: 'lax',
-      maxAge: 1000 * 5, // 1 ngày
+      maxAge: 1000 * 60 * 60 * 24, // 1 ngày
     });
     res.cookie('refjwt', jwtToken.refresh_token, {
       httpOnly: true,
@@ -63,7 +63,7 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 ngày
     });
     return {
-      message: 'Login successful',
+      user: req.user,
     };
   }
 
@@ -107,9 +107,16 @@ export class AuthController {
       httpOnly: true,
       secure: false, // true nếu dùng HTTPS
       sameSite: 'lax',
-      maxAge: 1000 * 5, // 15 phút
+      maxAge: 1000 * 60 * 60 * 24, // 15 phút
     });
 
     return { message: 'Refresh token successful' };
+  }
+
+  @Get('me2')
+  @UseGuards(JwtAuthGuard) // Sử dụng JwtAuthGuard để bảo vệ route này
+  getMe(@Req() req: any) {
+    console.log(req.user); // In ra thông tin người dùng đã xác thực
+    return req.user; // Trả về thông tin người dùng đã xác thực
   }
 }

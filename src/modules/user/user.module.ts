@@ -6,10 +6,11 @@ import { Users } from 'src/entities/Users';
 import { JwtStrategy } from 'src/passports/jwt.strategy';
 import { AuthModule } from '../auth/auth.module';
 import { RefreshTokens } from 'src/entities/RefreshTokens';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 @Module({
   imports: [
-    forwardRef(() => AuthModule) ,
+    forwardRef(() => AuthModule),
     TypeOrmModule.forFeature([Users]), // Import the Users entity here
     TypeOrmModule.forFeature([RefreshTokens]), // Import the Users entity here
   ],

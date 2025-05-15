@@ -16,10 +16,8 @@ import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
     JwtModule.registerAsync({
       imports: [ConfigModule], // Đảm bảo ConfigModule được import
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>(
-          'JWT_SECRET_KEY',
-        ), // Lấy từ .env
-        signOptions: { expiresIn: '5s' },
+        secret: configService.get<string>('JWT_SECRET_KEY'), // Lấy từ .env
+        signOptions: { expiresIn: '1d' },
       }),
       inject: [ConfigService],
     }),
@@ -27,6 +25,6 @@ import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [AuthService], // Xuất AuthService và JwtModule để sử dụng ở nơi khác
+  exports: [AuthService, JwtModule, JwtStrategy], // Xuất AuthService và JwtModule để sử dụng ở nơi khác
 })
 export class AuthModule {}

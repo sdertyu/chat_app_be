@@ -19,6 +19,14 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    return user; // Return the user object if validation is successful
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      middleName: user.middleName,
+      avatarUrl: user.avatarUrl,
+      // Add any other user properties you want to include in the request
+    }; // Return the user object if validation is successful
   }
 }
