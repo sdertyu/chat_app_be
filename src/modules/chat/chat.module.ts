@@ -6,10 +6,11 @@ import { Conversation } from 'src/entities/Conversation';
 import { ChatGateway } from './chat.gateway';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { Messages } from 'src/entities/Messages';
+import { Participants } from 'src/entities/Participants';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Conversation, Messages]), // Import the Conversation entity here
+    TypeOrmModule.forFeature([Conversation, Messages, Participants]), // Import the Conversation entity here
     // TypeOrmModule.forFeature([Messages]), // Uncomment if you have a Messages entity
   ],
   controllers: [ChatController],

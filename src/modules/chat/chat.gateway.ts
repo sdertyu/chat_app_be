@@ -34,37 +34,58 @@ export class ChatGateway
   ) {}
 
   afterInit(server: Socket) {
-    console.log('Server initialized');
+    // console.log('Server initialized');
   }
 
   handleConnection(client: Socket, ...args: any[]) {
-    console.log('Client connected ' + client.id);
+    // console.log('Client connected ' + client.id);
   }
 
   handleDisconnect(client: Socket) {
-    console.log('Client disconnected ' + client.id);
+    // console.log('Client disconnected ' + client.id);
+  }
+
+  @SubscribeMessage('typing')
+  handleTyping(
+    @MessageBody() data: { conversationId: string; senderId: number },
+  ) {
+    console.log(data.conversationId);
+    this.server.to(data.conversationId).emit('typing2', data);
   }
 
   @SubscribeMessage('join_room')
   handleJoinRoom(
-    @MessageBody() data: { conversationId: string },
+    @MessageBody()
+    data: { conversationId: string; lastMessageId: number; senderId: number },
     @ConnectedSocket() client: Socket,
   ) {
+    this.chatService.readMessage(
+      Number(data.conversationId),
+      data.lastMessageId,
+      data.senderId,
+    );
     client.join(data.conversationId);
-    console.log(data);
+    // console.log(data);
   }
 
   //   @UseGuards(JwtAuthGuard)
   @SubscribeMessage('sendMessage')
-  handleMessage(
+  async handleMessage(
     @MessageBody()
-    message: { senderId: number; content: string; conversationId: number },
+    message: {
+      id: number;
+      senderId: number;
+      content: string;
+      conversationId: number;
+    },
     @ConnectedSocket() client: Socket,
     // @Req() req: any,
   ) {
     // console.log('Received message:', message);
     // // message.senderId = req.user.id;
-    this.chatService.saveMessage(message);
+    const newMess = await this.chatService.saveMessage(message);
+
+    message.id = newMess.id;
     this.server
       .to(message.conversationId.toString())
       .emit('receive_message', message); //

@@ -1,8 +1,9 @@
 import { Conversation } from './../../entities/Conversation';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Messages } from './../../entities/Messages';
+import { Participants } from 'src/entities/Participants';
 
 @Injectable()
 export class ChatService {
@@ -11,6 +12,8 @@ export class ChatService {
     private readonly conversationRepository: Repository<Conversation>,
     @InjectRepository(Messages)
     private readonly messageRepository: Repository<Messages>,
+    @InjectRepository(Participants)
+    private readonly participantsRepository: Repository<Participants>,
   ) {}
 
   async findAllConversations(user: any) {
@@ -22,13 +25,14 @@ export class ChatService {
         },
       },
       order: {
+        createdAt: 'ASC',
         messages: {
           createdAt: 'ASC',
         },
       },
     });
 
-    console.log(convers);
+    // console.log(convers);
     return convers;
   }
 
@@ -44,7 +48,24 @@ export class ChatService {
       messageType: 'text', // Assuming you have a messageType field in your Messages entity
     });
 
-    await this.messageRepository.save(newMessage);
-    return newMessage;
+    return await this.messageRepository.save(newMessage);
+  }
+
+  async readMessage(
+    conversationId: number,
+    messageId: number,
+    senderId: number,
+  ) {
+    const participant = await this.participantsRepository.findOne({
+      where: {
+        usersId: senderId,
+        conversationId: conversationId,
+      },
+    });
+
+    if (participant) {
+      participant.lastReadMessageId = messageId;
+      await this.participantsRepository.save(participant);
+    }
   }
 }
