@@ -17,20 +17,37 @@ export class ChatService {
   ) {}
 
   async findAllConversations(user: any) {
-    const convers = await this.conversationRepository.find({
-      relations: ['participants', 'messages'],
-      where: {
-        participants: {
-          usersId: user.id,
-        },
-      },
-      order: {
-        createdAt: 'ASC',
-        messages: {
-          createdAt: 'ASC',
-        },
-      },
-    });
+    // const convers = await this.conversationRepository.find({
+    //   relations: ['participants', 'messages'],
+    //   where: {
+    //     participants: {
+    //       usersId: user.id,
+    //     },
+    //   },
+    //   order: {
+    //     createdAt: 'ASC',
+    //     messages: {
+    //       createdAt: 'ASC',
+    //     },
+    //   },
+    // });
+    const convers = await this.conversationRepository
+      .createQueryBuilder('conversation')
+      .leftJoinAndSelect('conversation.participants', 'participant')
+      .leftJoinAndSelect('conversation.messages', 'message')
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('participantSub.conversationId')
+          .from('participants', 'participantSub')
+          .where('participantSub.usersId = :userId')
+          .getQuery();
+        return 'conversation.id IN ' + subQuery;
+      })
+      .setParameter('userId', user.id)
+      .orderBy('conversation.createdAt', 'ASC')
+      .addOrderBy('message.createdAt', 'ASC')
+      .getMany();
 
     // console.log(convers);
     return convers;

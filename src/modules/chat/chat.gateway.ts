@@ -49,23 +49,23 @@ export class ChatGateway
   handleTyping(
     @MessageBody() data: { conversationId: string; senderId: number },
   ) {
-    console.log(data.conversationId);
+    // console.log(data.conversationId);
     this.server.to(data.conversationId).emit('typing2', data);
   }
 
   @SubscribeMessage('join_room')
   handleJoinRoom(
     @MessageBody()
-    data: { conversationId: string; lastMessageId: number; senderId: number },
+    data: { conversationId: string; lastMessageId: number; userId: number },
     @ConnectedSocket() client: Socket,
   ) {
     this.chatService.readMessage(
       Number(data.conversationId),
       data.lastMessageId,
-      data.senderId,
+      data.userId,
     );
     client.join(data.conversationId);
-    // console.log(data);
+    console.log(data);
   }
 
   //   @UseGuards(JwtAuthGuard)
