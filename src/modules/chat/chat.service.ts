@@ -85,4 +85,14 @@ export class ChatService {
       await this.participantsRepository.save(participant);
     }
   }
+
+  async getUserInConversation(conversationId: number) {
+    const participants = await this.participantsRepository.find({
+      where: {
+        conversationId: conversationId,
+      },
+    });
+
+    return participants.map((participant) => participant.usersId);
+  }
 }

@@ -12,7 +12,9 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { subscribe } from 'diagnostics_channel';
 import { Server, Socket } from 'socket.io';
+import { Conversation } from 'src/entities/Conversation';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 // import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
@@ -55,6 +57,16 @@ export class ChatGateway
 
   @SubscribeMessage('join_room')
   handleJoinRoom(
+    @MessageBody() data: { conversationId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    // console.log(data.conversationId);
+    client.join(data.conversationId);
+    // this.chatService.updateUserStatus(data.userId, true);
+  }
+
+  @SubscribeMessage('read_message')
+  handleReadMessage(
     @MessageBody()
     data: { conversationId: string; lastMessageId: number; userId: number },
     @ConnectedSocket() client: Socket,
@@ -64,8 +76,16 @@ export class ChatGateway
       data.lastMessageId,
       data.userId,
     );
-    client.join(data.conversationId);
-    console.log(data);
+  }
+
+  //   @UseGuards(JwtAuthGuard)
+  @SubscribeMessage('joinUserRoom')
+  handleJoinUserRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { userId: number },
+  ) {
+    client.join(data.userId.toString());
+    console.log('object');
   }
 
   //   @UseGuards(JwtAuthGuard)
@@ -77,17 +97,23 @@ export class ChatGateway
       senderId: number;
       content: string;
       conversationId: number;
+      createdAt: Date | null;
     },
     @ConnectedSocket() client: Socket,
     // @Req() req: any,
   ) {
-    // console.log('Received message:', message);
-    // // message.senderId = req.user.id;
     const newMess = await this.chatService.saveMessage(message);
-
     message.id = newMess.id;
-    this.server
-      .to(message.conversationId.toString())
-      .emit('receive_message', message); //
+    message.createdAt = newMess.createdAt;
+
+    const userRoom = await this.chatService.getUserInConversation(
+      message.conversationId,
+    );
+    userRoom.forEach((userId) => {
+      if (userId) {
+        this.server.to(userId.toString()).emit('receive_message', message);
+        console.log('object');
+      }
+    });
   }
 }
