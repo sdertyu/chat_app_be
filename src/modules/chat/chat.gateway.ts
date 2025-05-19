@@ -57,12 +57,11 @@ export class ChatGateway
 
   @SubscribeMessage('join_room')
   handleJoinRoom(
-    @MessageBody() data: { conversationId: string },
+    @MessageBody()
+    data: { conversationId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    // console.log(data.conversationId);
     client.join(data.conversationId);
-    // this.chatService.updateUserStatus(data.userId, true);
   }
 
   @SubscribeMessage('read_message')
@@ -76,6 +75,7 @@ export class ChatGateway
       data.lastMessageId,
       data.userId,
     );
+    this.server.to(data.conversationId).emit('read_message', data);
   }
 
   //   @UseGuards(JwtAuthGuard)
@@ -85,7 +85,7 @@ export class ChatGateway
     @MessageBody() data: { userId: number },
   ) {
     client.join(data.userId.toString());
-    console.log('object');
+    // console.log('object');
   }
 
   //   @UseGuards(JwtAuthGuard)
