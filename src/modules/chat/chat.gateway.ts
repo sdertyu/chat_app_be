@@ -52,7 +52,7 @@ export class ChatGateway
     @MessageBody() data: { conversationId: string; senderId: number },
   ) {
     // console.log(data.conversationId);
-    this.server.to(data.conversationId).emit('typing2', data);
+    this.server.to(data.conversationId).emit('typing', data);
   }
 
   @SubscribeMessage('join_room')
@@ -62,6 +62,24 @@ export class ChatGateway
     @ConnectedSocket() client: Socket,
   ) {
     client.join(data.conversationId);
+  }
+
+  @SubscribeMessage('leave_room')
+  handleLeaveRoom(
+    @MessageBody()
+    data: { conversationId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    // console.log(data.conversationId);
+    client.leave(data.conversationId);
+  }
+
+  @SubscribeMessage('leave_user_room')
+  handleLeaveUserRoom(
+    @MessageBody() data: { userId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.leave(data.userId.toString());
   }
 
   @SubscribeMessage('read_message')
@@ -112,7 +130,6 @@ export class ChatGateway
     userRoom.forEach((userId) => {
       if (userId) {
         this.server.to(userId.toString()).emit('receive_message', message);
-        console.log('object');
       }
     });
   }
