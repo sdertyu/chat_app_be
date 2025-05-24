@@ -35,6 +35,7 @@ export class ChatService {
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.participants', 'participant')
       .leftJoinAndSelect('conversation.messages', 'message')
+      .leftJoinAndSelect('participant.users', 'user')
       .where((qb) => {
         const subQuery = qb
           .subQuery()
