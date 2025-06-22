@@ -16,6 +16,7 @@ import { subscribe } from 'diagnostics_channel';
 import { Server, Socket } from 'socket.io';
 import { Conversation } from 'src/entities/Conversation';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { ISendMessage, ITyping } from './interface/ISendMessage';
 // import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 // @UseGuards(JwtAuthGuard)
@@ -49,9 +50,9 @@ export class ChatGateway
 
   @SubscribeMessage('typing')
   handleTyping(
-    @MessageBody() data: { conversationId: string; senderId: number },
+    @MessageBody() data: ITyping,
   ) {
-    // console.log(data.conversationId);
+    console.log(data.conversationId);
     this.server.to(data.conversationId).emit('typing', data);
   }
 
@@ -79,6 +80,7 @@ export class ChatGateway
     @MessageBody() data: { userId: number },
     @ConnectedSocket() client: Socket,
   ) {
+    
     client.leave(data.userId.toString());
   }
 
@@ -102,6 +104,7 @@ export class ChatGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { userId: number },
   ) {
+    console.log("object");
     client.join(data.userId.toString());
     // console.log('object');
   }
@@ -110,13 +113,7 @@ export class ChatGateway
   @SubscribeMessage('sendMessage')
   async handleMessage(
     @MessageBody()
-    message: {
-      id: number;
-      senderId: number;
-      content: string;
-      conversationId: number;
-      createdAt: Date | null;
-    },
+    message: ISendMessage,
     @ConnectedSocket() client: Socket,
     // @Req() req: any,
   ) {
@@ -125,7 +122,7 @@ export class ChatGateway
     message.createdAt = newMess.createdAt;
 
     const userRoom = await this.chatService.getUserInConversation(
-      message.conversationId,
+      Number(message.conversationId),
     );
     userRoom.forEach((userId) => {
       if (userId) {

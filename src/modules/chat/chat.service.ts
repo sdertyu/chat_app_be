@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Messages } from './../../entities/Messages';
 import { Participants } from 'src/entities/Participants';
+import { ISendMessage } from './interface/ISendMessage';
 
 @Injectable()
 export class ChatService {
@@ -54,15 +55,11 @@ export class ChatService {
     return convers;
   }
 
-  async saveMessage(message: {
-    senderId: number;
-    content: string;
-    conversationId: number;
-  }) {
+  async saveMessage(message: ISendMessage) {
     const newMessage = this.messageRepository.create({
       senderId: message.senderId,
       content: message.content,
-      conversationId: message.conversationId,
+      conversationId: Number(message.conversationId),
       messageType: 'text', // Assuming you have a messageType field in your Messages entity
     });
 
